@@ -5,7 +5,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from markupsafe import Markup
 import os
-
+from models.user import User
 
 class CategoryAdmin(ModelView, model=Category):
     name = "หมวดหมู่"
@@ -26,6 +26,70 @@ class CategoryAdmin(ModelView, model=Category):
     can_edit = True
     can_delete = True
     can_view_details = True
+
+
+
+class UserAdmin(ModelView, model=User):
+    name = "ผู้ใช้"
+    name_plural = "ผู้ใช้ทั้งหมด"
+    icon = "fa-solid fa-users"
+    
+    column_list = [
+        User.id,
+        User.username,
+        User.email,
+        User.full_name,
+        User.is_superuser,
+        User.is_active,
+        User.created_at,
+    ]
+    
+    column_labels = {
+        User.id: "รหัส",
+        User.username: "ชื่อผู้ใช้",
+        User.email: "อีเมล",
+        User.full_name: "ชื่อ-นามสกุล",
+        User.is_superuser: "ผู้ดูแลระบบ",
+        User.is_active: "สถานะ",
+        User.created_at: "วันที่สมัคร",
+    }
+    
+    column_searchable_list = [User.username, User.email, User.full_name]
+    column_sortable_list = [User.id, User.username, User.created_at]
+    column_filters = [User.is_superuser, User.is_active]
+    
+    form_columns = [
+        User.username,
+        User.email,
+        User.password,
+        User.full_name,
+        User.is_superuser,
+        User.is_active,
+    ]
+    
+    # ซ่อนรหัสผ่านในหน้า list และ detail
+    column_details_exclude_list = [User.password]
+    form_excluded_columns = []
+    
+    # กำหนดให้แสดง checkbox สำหรับ boolean fields
+    form_overrides = {
+        "is_superuser": None,
+        "is_active": None,
+    }
+    
+    can_create = True
+    can_edit = True
+    can_delete = True
+    can_view_details = True
+    
+    async def on_model_change(self, data, model, is_created, request):
+        """เข้ารหัสรหัสผ่านก่อนบันทึก"""
+        from auth.jwt_handler import hash_password
+        
+        if "password" in data and data["password"]:
+            model.password = hash_password(data["password"])
+        return model
+
 
 
 class ProductAdmin(ModelView, model=Product):

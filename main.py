@@ -21,7 +21,7 @@ from api import user_api, product_api, order_api
 
 # Admin
 from sqladmin import Admin
-from admin.admin_view import CategoryAdmin, ProductAdmin, UploadView
+from admin.admin_view import CategoryAdmin, ProductAdmin, UploadView, UserAdmin
 from admin.admin_auth import AdminAuth, SessionLocal
 from api.admin_auth_api import router as admin_auth_router
 
@@ -99,6 +99,7 @@ admin = Admin(
 admin.add_view(ProductAdmin)
 admin.add_view(UploadView)
 admin.add_view(CategoryAdmin)
+admin.add_view(UserAdmin)
 # =====================
 # Routers
 # =====================
