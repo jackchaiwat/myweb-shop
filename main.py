@@ -29,7 +29,17 @@ from api.admin_auth_api import router as admin_auth_router
 
 # Auth
 from auth.jwt_handler import create_access_token
+if os.path.exists(".env"):
+    load_dotenv()
 
+SECRET_KEY = os.getenv("SECRET_KEY")
+DATABASE_URL = os.getenv("DATABASE_URL")
+ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", SECRET_KEY)
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+
+# ตรวจสอบว่า SECRET_KEY มีค่า (สำคัญ!)
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is not set!")
 # =====================
 # สร้าง app
 # =====================
