@@ -1,11 +1,12 @@
 from sqladmin import ModelView, BaseView, expose
 from models.product import Product
 from models.category import Category
+from models.user import User
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from markupsafe import Markup
 import os
-from models.user import User
+
 
 class CategoryAdmin(ModelView, model=Category):
     name = "หมวดหมู่"
@@ -26,7 +27,6 @@ class CategoryAdmin(ModelView, model=Category):
     can_edit = True
     can_delete = True
     can_view_details = True
-
 
 
 class UserAdmin(ModelView, model=User):
@@ -56,9 +56,10 @@ class UserAdmin(ModelView, model=User):
     
     column_searchable_list = [User.username, User.email, User.full_name]
     column_sortable_list = [User.id, User.username, User.created_at]
-    column_filters = [User.is_superuser, User.is_active]
     
-    # ✅ แก้ไข: ใช้แค่ form_columns อย่างเดียว (ไม่ใช้ form_excluded_columns)
+    # ✅ เอาออก - ไม่ใช้ column_filters
+    # column_filters = [User.is_superuser, User.is_active]
+    
     form_columns = [
         User.username,
         User.email,
@@ -68,22 +69,12 @@ class UserAdmin(ModelView, model=User):
         User.is_active,
     ]
     
-    # ✅ หรือ ใช้ form_excluded_columns อย่างเดียว
-    # form_excluded_columns = [User.id, User.created_at, User.updated_at]
-    
-    # ✅ กำหนดให้แสดง checkbox สำหรับ boolean fields
-    form_overrides = {
-        "is_superuser": None,
-        "is_active": None,
-    }
-    
     can_create = True
     can_edit = True
     can_delete = True
     can_view_details = True
     
     async def on_model_change(self, data, model, is_created, request):
-        """เข้ารหัสรหัสผ่านก่อนบันทึก"""
         from auth.jwt_handler import hash_password
         
         if "password" in data and data["password"]:
@@ -117,36 +108,36 @@ class ProductAdmin(ModelView, model=Product):
     column_searchable_list = [Product.name]
     column_sortable_list = [Product.id, Product.name, Product.price]
     
-
+    # ✅ แก้ไข: ใช้ category_id ไม่ใช่ category
     form_columns = [
         Product.name,
         Product.price,
         Product.stock,
-        Product.category,
+        Product.category_id,  # เปลี่ยนเป็น category_id
         Product.image,
     ]
     
     column_formatters = {
-    Product.image: lambda m, a: Markup(f'''
-        <div style="
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        ">
-            <img src="/static/uploads/{m.image.split('/')[-1]}" style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
+        Product.image: lambda m, a: Markup(f'''
+            <div style="
+                width: 50px;
+                height: 50px;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #f5f5f5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             ">
-        </div>
-    ''') if m.image else Markup('<div style="width: 50px; height: 50px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;">ไม่มีรูป</div>'),
-    Product.category: lambda m, a: m.category.name if m.category else "-"
-}
+                <img src="/static/uploads/{m.image.split('/')[-1]}" style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                ">
+            </div>
+        ''') if m.image else Markup('<div style="width: 50px; height: 50px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;">ไม่มีรูป</div>'),
+        Product.category: lambda m, a: m.category.name if m.category else "-"
+    }
     
     column_formatters_detail = {
         Product.image: lambda m, a: Markup(f'<img src="/{m.image}" style="max-width: 200px;">') if m.image else '-'
@@ -159,6 +150,7 @@ class ProductAdmin(ModelView, model=Product):
     
     async def after_model_change(self, data, model, is_created, request):
         request.session["flash"] = "บันทึกสินค้าสำเร็จ"
+
 
 class UploadView(BaseView):
     name = "อัปโหลดรูปภาพ"
@@ -203,4 +195,3 @@ class UploadView(BaseView):
         </html>
         """
         return HTMLResponse(content=html, status_code=200)
-
