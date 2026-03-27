@@ -29,6 +29,8 @@ from api.admin_auth_api import router as admin_auth_router
 
 # Auth
 from auth.jwt_handler import create_access_token
+
+
 if os.path.exists(".env"):
     load_dotenv()
 
@@ -133,6 +135,25 @@ async def upload_images(files: list[UploadFile] = File(...)):
 # =====================
 # Login Endpoint
 # =====================
+from fastapi.staticfiles import StaticFiles
+import os
+
+frontend_path = "frontend"
+if os.path.exists(frontend_path):
+    app.mount("/frontend", StaticFiles(directory=frontend_path, html=True), name="frontend")
+
+@app.get("/{filename}.html")
+async def serve_html(filename: str):
+    file_path = f"frontend/{filename}.html"
+    if os.path.exists(file_path):
+        from fastapi.responses import FileResponse
+        return FileResponse(file_path)
+    return {"error": "File not found"}
+
+@app.get("/")
+async def root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/frontend/products.html")
 @app.post("/api/login")
 def login(username: str, password: str):
     if username == "admin" and password == "1234":
