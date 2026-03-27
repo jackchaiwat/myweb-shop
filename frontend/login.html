@@ -179,7 +179,6 @@
     </div>
 
     <script>
-        
         const API_BASE = "";
         
         // Enter key support
@@ -201,41 +200,48 @@
             const resultDiv = document.getElementById("result");
             const loginBtn = document.getElementById("loginBtn");
             
-            // ตรวจสอบว่ากรอกข้อมูลครบหรือไม่
             if (!username || !password) {
                 showResult("Please enter both username and password", "error");
                 return;
             }
             
-            // แสดง loading state
             const originalText = loginBtn.innerHTML;
             loginBtn.innerHTML = '<span class="loading"></span> Logging in...';
             loginBtn.disabled = true;
             
             try {
-                const response = await fetch("/admin-auth/login", {
+                let response;
+                let data;
+                
+                // ✅ วิธีที่ 1: ลอง login เป็น admin ก่อน
+                response = await fetch("/admin-auth/login", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
                 });
                 
-                const data = await response.json();
+                data = await response.json();
+                
+                // ✅ ถ้าไม่สำเร็จ ให้ลอง login เป็น user ทั่วไป
+                if (!response.ok) {
+                    response = await fetch("/users/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, password })
+                    });
+                    data = await response.json();
+                }
                 
                 if (response.ok && data.access_token) {
-                    // บันทึก token
                     localStorage.setItem("access_token", data.access_token);
                     if (data.user) {
                         localStorage.setItem("user", JSON.stringify(data.user));
+                    } else {
+                        localStorage.setItem("user", JSON.stringify({ username }));
                     }
                     
                     showResult(`✅ Login success! Welcome ${username}`, "success");
                     
-                    // เปลี่ยนหน้าไปที่ products
                     setTimeout(() => {
                         window.location.href = "products.html";
                     }, 1000);
@@ -245,9 +251,8 @@
                 }
             } catch (error) {
                 console.error("Login error:", error);
-                showResult("❌ Connection error. Please check if server is running.", "error");
+                showResult("❌ Connection error. Please try again.", "error");
             } finally {
-                // คืนค่า button
                 loginBtn.innerHTML = originalText;
                 loginBtn.disabled = false;
             }
@@ -258,7 +263,6 @@
             resultDiv.textContent = message;
             resultDiv.className = `result ${type}`;
             
-            // ซ่อนข้อความหลังจาก 3 วินาที
             setTimeout(() => {
                 resultDiv.style.display = 'none';
             }, 3000);
@@ -267,7 +271,6 @@
         // ตรวจสอบว่าล็อกอินแล้วหรือยัง
         const token = localStorage.getItem("access_token");
         if (token) {
-            // ถ้ามี token ให้ไปที่ products
             window.location.href = "products.html";
         }
     </script>
