@@ -263,7 +263,9 @@ class AddUploadFeatureMiddleware(BaseHTTPMiddleware):
                                 imgUrl = '/' + imgUrl;
                             }
                             
-                            imgUrl = imgUrl.replace(/\/\//g, '/');
+                            if (imgUrl.indexOf('//') === 0) {
+                                imgUrl = imgUrl.substring(1);
+                            }
                             
                             
                             let fileName = currentImageUrl.split('/').pop();
