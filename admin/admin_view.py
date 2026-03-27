@@ -58,6 +58,7 @@ class UserAdmin(ModelView, model=User):
     column_sortable_list = [User.id, User.username, User.created_at]
     column_filters = [User.is_superuser, User.is_active]
     
+    # ✅ แก้ไข: ใช้แค่ form_columns อย่างเดียว (ไม่ใช้ form_excluded_columns)
     form_columns = [
         User.username,
         User.email,
@@ -67,11 +68,10 @@ class UserAdmin(ModelView, model=User):
         User.is_active,
     ]
     
-    # ซ่อนรหัสผ่านในหน้า list และ detail
-    column_details_exclude_list = [User.password]
-    form_excluded_columns = []
+    # ✅ หรือ ใช้ form_excluded_columns อย่างเดียว
+    # form_excluded_columns = [User.id, User.created_at, User.updated_at]
     
-    # กำหนดให้แสดง checkbox สำหรับ boolean fields
+    # ✅ กำหนดให้แสดง checkbox สำหรับ boolean fields
     form_overrides = {
         "is_superuser": None,
         "is_active": None,
@@ -89,7 +89,6 @@ class UserAdmin(ModelView, model=User):
         if "password" in data and data["password"]:
             model.password = hash_password(data["password"])
         return model
-
 
 
 class ProductAdmin(ModelView, model=Product):
