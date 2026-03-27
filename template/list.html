@@ -1,0 +1,17 @@
+{% extends "sqladmin/list.html" %}
+
+{% block content %}
+    <div class="container">
+        {% if request.session.get("flash") %}
+        <div class="alert alert-success me-2">
+        {{ request.session.get("flash") }}
+        </div>
+        {% set _ = request.session.pop("flash") %}
+        {% endif %}
+
+        <a href="/admin/product/upload" class="btn btn-primary">
+Upload Image
+</a>
+    </div>
+    {{ super() }}
+{% endblock %}

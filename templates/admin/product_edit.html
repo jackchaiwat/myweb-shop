@@ -1,0 +1,96 @@
+{% extends "admin/model/edit.html" %}
+
+{% block tail %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.querySelector('input[name="image"]');
+    if (!imageInput) return;
+    
+    const imageFieldGroup = imageInput.closest('.mb-3');
+    if (!imageFieldGroup) return;
+    
+    // แสดงรูปปัจจุบัน
+    const currentImage = imageInput.value;
+    
+    // สร้าง div สำหรับอัปโหลดรูป
+    const uploadDiv = document.createElement('div');
+    uploadDiv.className = 'mb-3';
+    uploadDiv.innerHTML = `
+        <label class="form-label fw-bold">
+            <i class="fas fa-image me-2"></i>อัปโหลดรูปใหม่
+        </label>
+        <div>
+            <input type="file" id="productImage" accept="image/*" class="form-control">
+            <div id="imagePreview" class="mt-2"></div>
+            <small class="text-muted">อัปโหลดรูปใหม่เพื่อเปลี่ยนรูปปัจจุบัน</small>
+        </div>
+        <hr>
+    `;
+    
+    // ถ้ามีรูปปัจจุบัน แสดงไว้
+    if (currentImage) {
+        const currentDiv = document.createElement('div');
+        currentDiv.className = 'mb-3';
+        currentDiv.innerHTML = `
+            <label class="form-label">รูปปัจจุบัน</label>
+            <div>
+                <img src="/${currentImage}" style="max-width: 150px; border-radius: 8px;">
+                <div class="mt-1"><small class="text-muted">${currentImage}</small></div>
+            </div>
+        `;
+        imageFieldGroup.parentNode.insertBefore(currentDiv, imageFieldGroup);
+    }
+    
+    // แทรก div อัปโหลด
+    imageFieldGroup.parentNode.insertBefore(uploadDiv, imageFieldGroup);
+    
+    const fileInput = document.getElementById('productImage');
+    const preview = document.getElementById('imagePreview');
+    
+    fileInput.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 5 * 1024 * 1024) {
+            alert('ไฟล์มีขนาดใหญ่เกิน 5MB');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            preview.innerHTML = `
+                <img src="${ev.target.result}" style="max-width: 150px; border-radius: 8px;">
+                <div class="mt-1"><span class="badge bg-info">${file.name}</span></div>
+            `;
+        };
+        reader.readAsDataURL(file);
+        
+        const formData = new FormData();
+        formData.append('files', file);
+        
+        preview.innerHTML += `<div class="mt-2"><div class="spinner-border spinner-border-sm text-primary"></div> กำลังอัปโหลด...</div>`;
+        
+        try {
+            const response = await fetch('/upload-images', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.files && result.files.length > 0) {
+                imageInput.value = result.files[0].url;
+                preview.innerHTML += `<div class="text-success mt-1">✅ อัปโหลดสำเร็จ!</div>`;
+                setTimeout(() => {
+                    const successMsg = preview.querySelector('.text-success');
+                    if (successMsg) successMsg.remove();
+                }, 3000);
+            }
+        } catch (error) {
+            preview.innerHTML += `<div class="text-danger mt-1">❌ อัปโหลดล้มเหลว</div>`;
+        }
+    });
+});
+</script>
+{% endblock %}

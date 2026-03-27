@@ -1,0 +1,90 @@
+{% extends "create.html" %}
+
+{% block tail %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // หาช่องกรอก URL รูป
+    const imageInput = document.querySelector('input[name="image"]');
+    if (!imageInput) {
+        console.log("ไม่พบช่อง image");
+        return;
+    }
+    
+    // หา container ของช่อง image
+    const imageFieldGroup = imageInput.closest('.mb-3');
+    if (!imageFieldGroup) return;
+    
+    // สร้าง div สำหรับอัปโหลดรูป
+    const uploadDiv = document.createElement('div');
+    uploadDiv.className = 'mb-3';
+    uploadDiv.innerHTML = `
+        <label class="form-label fw-bold">
+            <i class="fas fa-image me-2"></i>อัปโหลดรูปภาพ
+        </label>
+        <div>
+            <input type="file" id="productImage" accept="image/*" class="form-control">
+            <div id="imagePreview" class="mt-2"></div>
+            <small class="text-muted">รองรับไฟล์ .jpg, .png, .gif, .webp (ไม่เกิน 5MB)</small>
+        </div>
+        <hr>
+    `;
+    
+    // แทรกก่อนช่อง image
+    imageFieldGroup.parentNode.insertBefore(uploadDiv, imageFieldGroup);
+    
+    // จัดการการอัปโหลด
+    const fileInput = document.getElementById('productImage');
+    const preview = document.getElementById('imagePreview');
+    
+    fileInput.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 5 * 1024 * 1024) {
+            alert('ไฟล์มีขนาดใหญ่เกิน 5MB');
+            return;
+        }
+        
+        // Preview
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            preview.innerHTML = `
+                <img src="${ev.target.result}" style="max-width: 150px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                <div class="mt-1"><span class="badge bg-info">${file.name}</span></div>
+            `;
+        };
+        reader.readAsDataURL(file);
+        
+        // อัปโหลด
+        const formData = new FormData();
+        formData.append('files', file);
+        
+        preview.innerHTML += `<div class="mt-2"><div class="spinner-border spinner-border-sm text-primary"></div> กำลังอัปโหลด...</div>`;
+        
+        try {
+            const response = await fetch('/upload-images', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.files && result.files.length > 0) {
+                imageInput.value = result.files[0].url;
+                preview.innerHTML += `<div class="text-success mt-1">✅ อัปโหลดสำเร็จ!</div>`;
+                setTimeout(() => {
+                    const successMsg = preview.querySelector('.text-success');
+                    if (successMsg) successMsg.remove();
+                }, 3000);
+            } else {
+                preview.innerHTML += `<div class="text-danger mt-1">❌ อัปโหลดล้มเหลว</div>`;
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            preview.innerHTML += `<div class="text-danger mt-1">❌ อัปโหลดล้มเหลว</div>`;
+        }
+    });
+});
+</script>
+{% endblock %}
