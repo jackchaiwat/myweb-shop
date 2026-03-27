@@ -4,9 +4,14 @@ from models.user import User
 from models.category import Category
 from models.product import Product
 from auth.jwt_handler import hash_password
+import dotenv
+dotenv.load_dotenv() 
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./mydb.sqlite3")
 
 def init_database():
     """สร้างข้อมูลเริ่มต้นสำหรับ Deploy"""
+    print("🌱 Starting database seeding...")
+    print(f"📁 Database path: {os.getenv('DATABASE_URL', 'sqlite:///./mydb.sqlite3')}")
     print("Starting database seeding...")
     db = SessionLocal()
     
