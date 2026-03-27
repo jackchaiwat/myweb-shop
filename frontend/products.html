@@ -331,7 +331,8 @@
     </div>
 
     <script>
-        const API_BASE = "http://127.0.0.1:8000";
+        // ✅ แก้ไข: ใช้ relative path แทน localhost
+        const API_BASE = "";  // ใช้ relative path เชื่อมต่อกับ domain เดียวกัน
         const token = localStorage.getItem("access_token");
 
         if (!token) {
@@ -352,7 +353,8 @@
             const container = document.getElementById("products-container");
             
             try {
-                const response = await fetch(`${API_BASE}/products/`, {
+                // ✅ ใช้ relative path
+                const response = await fetch(`/products/`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
                 
@@ -376,7 +378,7 @@
                     <div class="error-container">
                         <div style="font-size: 3rem;">😢</div>
                         <h3>Cannot connect to server</h3>
-                        <p>Make sure backend is running at ${API_BASE}</p>
+                        <p>Please try again later</p>
                         <button onclick="loadProducts()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">Retry</button>
                     </div>
                 `;
@@ -392,13 +394,13 @@
             }
             
             container.innerHTML = products.map(product => {
-                // แก้ไข URL รูปให้ถูกต้อง
+                // ✅ แก้ไข URL รูปให้ถูกต้อง
                 let imageUrl = 'https://via.placeholder.com/300x200?text=No+Image';
                 
                 if (product.image) {
-                    // ถ้า URL ขึ้นต้นด้วย / ให้ใช้เต็ม
+                    // ถ้า URL ขึ้นต้นด้วย / ให้ใช้ relative path
                     if (product.image.startsWith('/')) {
-                        imageUrl = `${API_BASE}${product.image}`;
+                        imageUrl = product.image;
                     } 
                     // ถ้า URL ขึ้นต้นด้วย http
                     else if (product.image.startsWith('http')) {
@@ -406,7 +408,7 @@
                     }
                     // ถ้าเป็น relative path
                     else {
-                        imageUrl = `${API_BASE}/${product.image}`;
+                        imageUrl = '/' + product.image;
                     }
                 }
                 

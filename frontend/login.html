@@ -179,9 +179,9 @@
     </div>
 
     <script>
-        // API URL - ใช้ base URL ของ backend
-        const API_BASE = "http://127.0.0.1:8000";
-
+        
+        const API_BASE = "";
+        
         // Enter key support
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -213,9 +213,7 @@
             loginBtn.disabled = true;
             
             try {
-                // ใช้ endpoint /users/login (สำหรับ user ทั่วไป)
-                // หรือ /admin-auth/login (สำหรับ admin)
-                const response = await fetch(`${API_BASE}/users/login`, {
+                const response = await fetch("/admin-auth/login", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -247,7 +245,7 @@
                 }
             } catch (error) {
                 console.error("Login error:", error);
-                showResult("❌ Connection error. Please check if server is running at " + API_BASE, "error");
+                showResult("❌ Connection error. Please check if server is running.", "error");
             } finally {
                 // คืนค่า button
                 loginBtn.innerHTML = originalText;
@@ -263,7 +261,6 @@
             // ซ่อนข้อความหลังจาก 3 วินาที
             setTimeout(() => {
                 resultDiv.style.display = 'none';
-                resultDiv.style.display = '';
             }, 3000);
         }
         
